@@ -1,16 +1,9 @@
 # 🛍️ STYLIZE — AI-Powered Fashion Shopping Platform
 
-![STYLIZE Banner](https://via.placeholder.com/1200x400/1a1a2e/ffffff?text=STYLIZE+%7C+AI-Powered+Fashion+Platform)
-
 > 🏆 **2nd Place — EXPO'24, COMSATS ILC** | Out of all competing engineering teams
 
-[![React](https://img.shields.io/badge/React-18.2.0-61DAFB?style=for-the-badge&logo=react&logoColor=white)](https://reactjs.org/)
-[![Node.js](https://img.shields.io/badge/Node.js-19.0-339933?style=for-the-badge&logo=nodedotjs&logoColor=white)](https://nodejs.org/)
-[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?style=for-the-badge&logo=postgresql&logoColor=white)](https://postgresql.org/)
-[![Flutter](https://img.shields.io/badge/Flutter-3.13.7-02569B?style=for-the-badge&logo=flutter&logoColor=white)](https://flutter.dev/)
-[![OpenCV](https://img.shields.io/badge/OpenCV-4.5.4-5C3EE8?style=for-the-badge&logo=opencv&logoColor=white)](https://opencv.org/)
-[![Express](https://img.shields.io/badge/Express.js-4.x-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
 
+Full Video Preview: https://youtu.be/C_GZ-OTTN_E?si=gQ6SZ_hzhpMalWpb
 ---
 
 ## 📖 About
@@ -232,17 +225,6 @@ Full project documentation is available in the `/docs` folder:
 > **2nd Place — EXPO'24, COMSATS ILC (Islamabad)**  
 > Competed against all final-year engineering teams across the university  
 > Recognized for innovation in AI-driven fashion retail and AR integration
-
----
-
-## 👩‍💻 Team
-
-| Name | Role | Modules |
-|------|------|---------|
-| **Fatima Usman** | Full-Stack Engineer & AR Lead | Modules 1, 3, 6, 9, 11 + AR/Backend |
-| Mehmil Mirza | Full-Stack Engineer | Modules 2, 4, 5, 7, 8 + AR/Backend |
-
-**Supervisor:** Dr. Zulfiqar Ali, COMSATS University Islamabad
 
 ---
 
