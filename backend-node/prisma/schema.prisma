@@ -1,0 +1,396 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  RETAILER
+  BUYER
+  ADMIN
+}
+
+enum VerificationType {
+  LOGIN
+  SIGN_UP
+  FORGOT_PASSWORD
+}
+
+model User {
+  id               String   @id @default(uuid())
+  username         String   @unique
+  password         String
+  email            String   @unique
+  phone            String
+  isRestricted     Boolean  @default(false)
+  isVerified       Boolean  @default(false)
+  profileImageKey  String?
+  stripeCustomerId String?  @unique
+  role             UserRole
+  isPaymentSetup   Boolean  @default(false)
+  isShopSetup      Boolean  @default(false)
+
+  Shop  Shop?
+  Buyer Buyer?
+
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime           @updatedAt
+  VerificationCode VerificationCode[]
+}
+
+model VerificationCode {
+  id               Int              @id @default(autoincrement())
+  code             String
+  expiry           DateTime
+  verificationType VerificationType
+  userId           String           @unique
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  User      User     @relation(fields: [userId], references: [id])
+}
+
+model Buyer {
+  id        Int     @id @default(autoincrement())
+  firstName String
+  lastName  String
+  address   String
+  city      String
+  country   String
+  zip       String
+  measures  String?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+
+  Cart     Cart?
+  Orders   Order[]
+  Wishlist Wishlist?
+  Studio   Studio?
+  Quiz     Quiz?
+}
+
+model Retailer {
+  id         Int      @id @default(autoincrement())
+  name       String
+  nic        String
+  idDocFront String
+  idDocBack  String
+  idImageKey String[]
+
+  accountTitle String
+  accountNo    String
+  accountIban  String
+  bankName     String
+  branchName   String
+  branchCode   String
+  bankCopy     String
+
+  shopId Int  @unique
+  Shop   Shop @relation(fields: [shopId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Shop {
+  id           Int      @id @default(autoincrement())
+  name         String   @unique
+  description  String?
+  logo         String
+  phone        String?
+  email        String?
+  socials      String[] @default([])
+  productsType String[] @default([])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id])
+
+  Retailer   Retailer?
+  Policy     Policy?
+  Category   Category[]
+  Product    Product[]
+  Sale       Sale[]
+  ShopOrders ShopOrder[]
+}
+
+model Policy {
+  id           Int     @id @default(autoincrement())
+  refund       String?
+  returnPolicy String?
+  shipping     String?
+  shippingFee  Int?
+
+  shopId Int  @unique
+  Shop   Shop @relation(fields: [shopId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Category {
+  id     Int    @id @default(autoincrement())
+  name   String
+  shopId Int
+
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  Shop      Shop      @relation(fields: [shopId], references: [id])
+  products  Product[]
+
+  @@unique([name, shopId], name: "categoryIdentifier")
+}
+
+model Product {
+  id             Int      @id @default(autoincrement())
+  sku            String   @unique
+  name           String
+  type           String?
+  description    String?
+  price          Int?     @default(0)
+  stock          Int?     @default(0)
+  status         String   @default("active")
+  selectedColors String[]
+  images         String[]
+  selectedSizes  String[]
+  sizeChart      String
+  measures       String
+  specifications Json?
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  sizeChartId Int? @unique
+  shopId      Int
+  categoryId  Int
+
+  Shop      Shop       @relation(fields: [shopId], references: [id])
+  SizeChart SizeChart? @relation(fields: [sizeChartId], references: [id])
+  Category  Category   @relation(fields: [categoryId], references: [id])
+
+  OrderDetails  OrderDetail[]
+  CartItems     CartItem[]
+  WishlistItems WishlistItem[]
+  SaleItems     SaleItem[]
+}
+
+enum SaleCategory {
+  ALL
+  CATEGORIES
+  PRODUCTS
+}
+
+model Sale {
+  id           Int          @id @default(autoincrement())
+  coupon       String       @unique
+  discount     Int
+  saleCategory SaleCategory
+  status       String       @default("active")
+  startDate    DateTime
+  endDate      DateTime
+  shopId       Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Shop      Shop        @relation(fields: [shopId], references: [id])
+  SaleItems SaleItem[]
+}
+
+model SaleItem {
+  id        Int @id @default(autoincrement())
+  saleId    Int
+  productId Int
+  salePrice Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  Sale    Sale      @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  Product Product   @relation(fields: [productId], references: [id])
+
+  @@unique([saleId, productId], name: "saleItemProductIdentifier")
+}
+
+model NotifiedProduct {
+  id        Int @id @default(autoincrement())
+  productId Int
+  buyerId   Int
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Order {
+  id              Int       @id @default(autoincrement())
+  buyerId         Int
+  date            DateTime  @default(now())
+  paymentMethod   String
+  paymentStatus   String    @default("PENDING")
+  subTotal        Int
+  total           Int
+  deletedAtRetail DateTime?
+  deletedAtBuyer  DateTime?
+
+  Buyer      Buyer       @relation(fields: [buyerId], references: [id])
+  ShopOrders ShopOrder[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model ShopOrder {
+  id              Int       @id @default(autoincrement())
+  orderId         Int
+  status          String    @default("PENDING")
+  shopId          Int
+  subTotal        Int
+  shippingFee     Int
+  total           Int
+  deletedAtRetail DateTime?
+  deletedAtBuyer  DateTime?
+
+  Order        Order         @relation(fields: [orderId], references: [id])
+  Shop         Shop          @relation(fields: [shopId], references: [id])
+  OrderDetails OrderDetail[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model OrderDetail {
+  id          Int     @id @default(autoincrement())
+  shopOrderId Int
+  productId   Int
+  quantity    Int
+  size        String?
+  color       String?
+  subTotal    Int
+
+  ShopOrder ShopOrder @relation(fields: [shopOrderId], references: [id])
+  Product   Product   @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Cart {
+  id       Int @id @default(autoincrement())
+  quantity Int
+  total    Int
+
+  buyerId Int   @unique
+  Buyer   Buyer @relation(fields: [buyerId], references: [id])
+
+  createdAt DateTime   @default(now())
+  updatedAt DateTime   @updatedAt
+  CartItems CartItem[]
+}
+
+model CartItem {
+  id        Int    @id @default(autoincrement())
+  quantity  Int
+  subTotal  Int
+  // total     Int
+  size      String
+  color     String
+  productId Int
+
+  cartId  Int
+  Cart    Cart    @relation(fields: [cartId], references: [id])
+  Product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Wishlist {
+  id String @id @default(uuid())
+
+  buyerId Int   @unique
+  Buyer   Buyer @relation(fields: [buyerId], references: [id])
+
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  WishlistItems WishlistItem[]
+}
+
+model WishlistItem {
+  id        Int @id @default(autoincrement())
+  // quantity  Int
+  // subTotal  Int
+  // total     Int
+  // size      String
+  // color     String
+  productId Int
+
+  wishlistId String
+  Wishlist   Wishlist @relation(fields: [wishlistId], references: [id])
+
+  Product Product @relation(fields: [productId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+enum StudioCategory {
+  TOPS
+  BOTTOMS
+  FOOTWEAR
+}
+
+model Studio {
+  id String @id @default(uuid())
+
+  buyerId Int   @unique
+  Buyer   Buyer @relation(fields: [buyerId], references: [id])
+
+  createdAt  DateTime     @default(now())
+  updatedAt  DateTime     @updatedAt
+  StudioItem StudioItem[]
+}
+
+model StudioItem {
+  id             Int            @id @default(autoincrement())
+  studioCategory StudioCategory
+  product        String
+
+  studioId String
+  Studio   Studio @relation(fields: [studioId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model SizeChart {
+  id            Int      @id @default(autoincrement())
+  selectedSizes String[]
+  sizeChart     String
+  measures      String
+
+  products Product[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Quiz {
+  id       Int      @id @default(autoincrement())
+  question String
+  answer   String
+  options  String[]
+  imageKey String
+
+  buyerId Int   @unique
+  Buyer   Buyer @relation(fields: [buyerId], references: [id])
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
